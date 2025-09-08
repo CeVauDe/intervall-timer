@@ -17,9 +17,9 @@ class TimerCountdownTest {
         
         viewModel.startTimer()
         
-        // Initial state should be training with 60 seconds
+        // Initial state should be training with 5 seconds
         assertEquals(TimerPhase.TRAINING, viewModel.timerState.value.phase)
-        assertEquals(60, viewModel.timerState.value.remainingTimeSeconds)
+        assertEquals(5, viewModel.timerState.value.remainingTimeSeconds)
         assertTrue(viewModel.timerState.value.isRunning)
     }
 
@@ -30,12 +30,12 @@ class TimerCountdownTest {
         // Start timer and wait for training phase to complete
         viewModel.startTimer()
         
-        // Manually trigger transition for test (we'll implement fast forwarding)
+        // Manually complete training phase
         viewModel.completeCurrentPhase()
         
-        // Should transition to pause phase with 120 seconds (2 minutes)
+        // Should now be in pause phase with 5 seconds
         assertEquals(TimerPhase.PAUSE, viewModel.timerState.value.phase)
-        assertEquals(120, viewModel.timerState.value.remainingTimeSeconds)
+        assertEquals(5, viewModel.timerState.value.remainingTimeSeconds)
         assertTrue(viewModel.timerState.value.isRunning)
     }
 

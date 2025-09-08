@@ -16,10 +16,29 @@ class TimerViewModel : ViewModel() {
     
     private var countdownJob: Job? = null
     
+    fun startComplexRoutine() {
+        val routine = TrainingRoutineFactory.createComplexRoutine()
+        startRoutine(routine)
+    }
+
+    private fun startRoutine(routine: TrainingRoutine) {
+        routine.currentStep?.let { step ->
+            _timerState.value = TimerState(
+                phase = step.phase,
+                remainingTimeSeconds = step.durationSeconds,
+                isRunning = true,
+                routine = routine,
+                currentStepIndex = routine.currentStepIndex,
+                totalSteps = routine.steps.size
+            )
+            startCountdown()
+        }
+    }
+
     fun startTimer() {
         _timerState.value = TimerState(
             phase = TimerPhase.TRAINING,
-            remainingTimeSeconds = 60,
+            remainingTimeSeconds = 5,
             isRunning = true
         )
         startCountdown()
@@ -32,27 +51,58 @@ class TimerViewModel : ViewModel() {
     
     fun completeCurrentPhase() {
         val currentState = _timerState.value
-        when (currentState.phase) {
-            TimerPhase.TRAINING -> {
-                _timerState.value = TimerState(
-                    phase = TimerPhase.PAUSE,
-                    remainingTimeSeconds = 120,
-                    isRunning = true
-                )
-                startCountdown()
+        val routine = currentState.routine
+
+        if (routine != null) {
+            // Routine-based progression
+            proceedToNextStep()
+        } else {
+            // Legacy progression for backward compatibility
+            when (currentState.phase) {
+                TimerPhase.TRAINING -> {
+                    _timerState.value = TimerState(
+                        phase = TimerPhase.PAUSE,
+                        remainingTimeSeconds = 5,
+                        isRunning = true
+                    )
+                    startCountdown()
+                }
+                TimerPhase.PAUSE -> {
+                    countdownJob?.cancel()
+                    _timerState.value = TimerState(
+                        phase = TimerPhase.FINISHED,
+                        remainingTimeSeconds = 0,
+                        isRunning = false
+                    )
+                }
+                else -> { /* Do nothing for IDLE or FINISHED */ }
             }
-            TimerPhase.PAUSE -> {
-                countdownJob?.cancel()
-                _timerState.value = TimerState(
-                    phase = TimerPhase.FINISHED,
-                    remainingTimeSeconds = 0,
-                    isRunning = false
-                )
-            }
-            else -> { /* Do nothing for IDLE or FINISHED */ }
         }
     }
-    
+
+    private fun proceedToNextStep() {
+        val currentState = _timerState.value
+        val routine = currentState.routine ?: return
+
+        val nextRoutine = routine.nextStep()
+
+        if (nextRoutine.isComplete) {
+            // Routine finished
+            countdownJob?.cancel()
+            _timerState.value = TimerState(
+                phase = TimerPhase.FINISHED,
+                remainingTimeSeconds = 0,
+                isRunning = false,
+                routine = nextRoutine,
+                currentStepIndex = nextRoutine.currentStepIndex,
+                totalSteps = nextRoutine.steps.size
+            )
+        } else {
+            // Continue to next step
+            startRoutine(nextRoutine)
+        }
+    }
+
     private fun startCountdown() {
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {

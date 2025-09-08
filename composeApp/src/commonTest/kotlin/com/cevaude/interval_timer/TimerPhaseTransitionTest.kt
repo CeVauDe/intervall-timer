@@ -15,26 +15,26 @@ import kotlin.test.assertTrue
 class TimerPhaseTransitionTest {
 
     @Test
-    fun trainingPhase_automaticallyTransitionsToPauseAfter60Seconds() = runTest {
+    fun trainingPhase_automaticallyTransitionsToPauseAfter5Seconds() = runTest {
         val viewModel = TimerViewModel()
         
         // Start timer - should begin training phase
         viewModel.startTimer()
         assertEquals(TimerPhase.TRAINING, viewModel.timerState.value.phase)
-        assertEquals(60, viewModel.timerState.value.remainingTimeSeconds)
-        
-        // Fast forward through all 60 seconds of training
+        assertEquals(5, viewModel.timerState.value.remainingTimeSeconds)
+
+        // Fast forward through all 5 seconds of training
         // We use completeCurrentPhase for testing instead of waiting real time
         viewModel.completeCurrentPhase()
         
         // Should now be in pause phase
         assertEquals(TimerPhase.PAUSE, viewModel.timerState.value.phase)
-        assertEquals(120, viewModel.timerState.value.remainingTimeSeconds)
+        assertEquals(5, viewModel.timerState.value.remainingTimeSeconds)
         assertTrue(viewModel.timerState.value.isRunning)
     }
 
     @Test
-    fun pausePhase_automaticallyTransitionsToFinishedAfter120Seconds() = runTest {
+    fun pausePhase_automaticallyTransitionsToFinishedAfter5Seconds() = runTest {
         val viewModel = TimerViewModel()
         
         // Start and move through training to pause
@@ -43,8 +43,8 @@ class TimerPhaseTransitionTest {
         
         // Verify we're in pause phase
         assertEquals(TimerPhase.PAUSE, viewModel.timerState.value.phase)
-        assertEquals(120, viewModel.timerState.value.remainingTimeSeconds)
-        
+        assertEquals(5, viewModel.timerState.value.remainingTimeSeconds)
+
         // Complete pause phase
         viewModel.completeCurrentPhase() // Pause -> Finished
         
@@ -63,8 +63,8 @@ class TimerPhaseTransitionTest {
         viewModel.startTimer()
         
         val initialTime = viewModel.timerState.value.remainingTimeSeconds
-        assertEquals(60, initialTime)
-        
+        assertEquals(5, initialTime)
+
         // The issue is that automatic transitions aren't working
         // This test should verify that when remainingTimeSeconds reaches 0,
         // the phase automatically transitions
