@@ -6,6 +6,29 @@ This file provides guidance to GitHub COPILOT when working with code in this rep
 
 IntervalTimer is a Kotlin Multiplatform project targeting Android, iOS, and Desktop (JVM) using Compose Multiplatform for the UI framework. The application displays a simple "Hello world!" interface and is configured for cross-platform development.
 
+## Project Structure
+
+### Main Folders
+```
+intervall-timer/
+├── composeApp/                   # Main multiplatform application module
+│   ├── src/commonMain/           # Shared code across all platforms
+│   ├── src/commonTest/           # Shared test code
+│   ├── src/androidMain/          # Android-specific implementations
+│   ├── src/iosMain/              # iOS-specific implementations
+│   └── src/jvmMain/              # Desktop JVM-specific implementations
+├── iosApp/                       # iOS-specific Xcode project
+├── gradle/                       # Gradle wrapper and version catalog
+└── build.gradle.kts              # Root build configuration
+```
+
+### Configuration Files
+```
+gradle/
+├── libs.versions.toml            # Centralized dependency versions
+└── wrapper/                      # Gradle wrapper files
+```
+
 ## Architecture
 
 - **Multiplatform Structure**: Uses Kotlin Multiplatform with shared code in `commonMain` and platform-specific implementations in `androidMain`, `iosMain`, and `jvmMain`
@@ -17,7 +40,7 @@ IntervalTimer is a Kotlin Multiplatform project targeting Android, iOS, and Desk
   - Desktop JVM
 
 ## Development approach
-- Use a test-driven development approach to implement the app: 
+- Use a test-driven development approach to implement any new code: 
   1. Write test
   2. run test to see it fail for the expected reason
   3. implement just the necessary code to make test pass
@@ -25,9 +48,9 @@ IntervalTimer is a Kotlin Multiplatform project targeting Android, iOS, and Desk
   5. commit code
   6. refactor if necessary
   7. run tests to see them still pass
-  8. commit
-  9. start again with 1. and the next feature
-- write as little code as possible to complete a given task
+  8. commit refactorings
+- Write as little code as possible to complete a given task
+- 
 
 ## Common Development Commands
 
@@ -44,6 +67,11 @@ IntervalTimer is a Kotlin Multiplatform project targeting Android, iOS, and Desk
 - **Android**: Build configurations available in `composeApp/build.gradle.kts` with debug/release variants
 - **iOS**: Framework target configured as static framework with base name "ComposeApp"
 - **Desktop**: Main class is `com.cevaude.interval_timer.MainKt`, supports DMG, MSI, and DEB packaging
+
+## UI Guidelines
+- Follow Material3 design principles
+- Use Compose Multiplatform components for UI elements
+- Keep the design minimalistic and user-friendly
 
 ## Key Configuration Files
 
@@ -62,4 +90,3 @@ IntervalTimer is a Kotlin Multiplatform project targeting Android, iOS, and Desk
 
 ### Build Failures
 - **Invalid Timestamp Error**: If you encounter "Invalid Timestamp -2147483648000" errors during build, this is typically due to corrupted file timestamps in the compose resources directory. Fix by running: `touch composeApp/src/commonMain/composeResources/drawable`
- 
