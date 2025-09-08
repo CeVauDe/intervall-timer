@@ -55,6 +55,15 @@ fun App() {
                     fontWeight = FontWeight.Bold
                 )
                 
+                // Progress information for routine
+                if (timerState.routine != null) {
+                    Text(
+                        text = "Step ${timerState.currentStepIndex + 1} of ${timerState.totalSteps}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Circular progress indicator with timer
@@ -63,10 +72,25 @@ fun App() {
                     modifier = Modifier.size(200.dp)
                 ) {
                     CircularProgress(
-                        progress = getProgressPercentage(timerState.phase, timerState.remainingTimeSeconds),
+                        progress = if (timerState.routine != null) {
+                            // Use routine progress for outer ring
+                            timerState.progressPercentage
+                        } else {
+                            // Use phase progress for simple timer
+                            getProgressPercentage(timerState.phase, timerState.remainingTimeSeconds)
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                     
+                    // Inner ring for current step progress (only for routines)
+                    if (timerState.routine != null) {
+                        CircularProgress(
+                            progress = getProgressPercentage(timerState.phase, timerState.remainingTimeSeconds),
+                            modifier = Modifier.size(160.dp),
+                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                        )
+                    }
+
                     Text(
                         text = formatTime(timerState.remainingTimeSeconds),
                         style = MaterialTheme.typography.displayMedium,
@@ -80,7 +104,7 @@ fun App() {
                 Button(
                     onClick = {
                         when (timerState.phase) {
-                            TimerPhase.IDLE -> viewModel.startTimer()
+                            TimerPhase.IDLE -> viewModel.startComplexRoutine()
                             TimerPhase.WARMUP, TimerPhase.TRAINING, TimerPhase.PAUSE, TimerPhase.COOLDOWN -> viewModel.stopTimer()
                             TimerPhase.FINISHED -> viewModel.stopTimer()
                         }
