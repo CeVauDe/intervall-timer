@@ -13,9 +13,10 @@ class TimerViewModel : ViewModel() {
     
     private val _timerState = MutableStateFlow(TimerState())
     val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
-    
+    private val _finisherSoundEvent = MutableStateFlow(0)
+    val finisherSoundEvent: StateFlow<Int> = _finisherSoundEvent.asStateFlow()
     private var countdownJob: Job? = null
-    
+
     fun startComplexRoutine() {
         val routine = TrainingRoutineFactory.createComplexRoutine()
         startRoutine(routine)
@@ -85,6 +86,8 @@ class TimerViewModel : ViewModel() {
         val routine = currentState.routine ?: return
 
         val nextRoutine = routine.nextStep()
+        // Finisher sound event: always trigger when moving to next step (except initial start)
+        _finisherSoundEvent.value += 1
 
         if (nextRoutine.isComplete) {
             // Routine finished

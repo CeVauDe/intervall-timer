@@ -33,11 +33,19 @@ import kotlin.math.sin
 
 @Composable
 @Preview
-fun App() {
+fun App(finisherSoundPlayer: FinisherSoundPlayer = NoOpFinisherSoundPlayer) {
     MaterialTheme {
         val viewModel: TimerViewModel = viewModel()
         val timerState by viewModel.timerState.collectAsState()
-        
+        val finisherSoundEvent by viewModel.finisherSoundEvent.collectAsState()
+
+        // Play sound when finisherSoundEvent increments
+        androidx.compose.runtime.LaunchedEffect(finisherSoundEvent) {
+            if (finisherSoundEvent > 0) {
+                finisherSoundPlayer.play()
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize(),

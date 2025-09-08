@@ -75,4 +75,20 @@ class AppUIIntegrationTest {
         assertTrue(routineProgress >= 0.0f && routineProgress <= 1.0f)
         assertTrue(stepProgress >= 0.0f && stepProgress <= 1.0f)
     }
+
+    @Test
+    fun app_playsFinisherSound_whenPhaseFinishes() = runTest {
+        val viewModel = TimerViewModel()
+        viewModel.startComplexRoutine()
+
+        val initialSound = viewModel.finisherSoundEvent.value
+
+        // Complete first phase (WARMUP -> TRAINING)
+        viewModel.completeCurrentPhase()
+        assertEquals(initialSound + 1, viewModel.finisherSoundEvent.value, "Finisher sound should play after first phase")
+
+        // Complete second phase (TRAINING -> PAUSE)
+        viewModel.completeCurrentPhase()
+        assertEquals(initialSound + 2, viewModel.finisherSoundEvent.value, "Finisher sound should play after second phase")
+    }
 }
