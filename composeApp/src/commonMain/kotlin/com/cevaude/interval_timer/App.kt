@@ -81,7 +81,7 @@ fun App() {
                     onClick = {
                         when (timerState.phase) {
                             TimerPhase.IDLE -> viewModel.startTimer()
-                            TimerPhase.TRAINING, TimerPhase.PAUSE -> viewModel.stopTimer()
+                            TimerPhase.WARMUP, TimerPhase.TRAINING, TimerPhase.PAUSE, TimerPhase.COOLDOWN -> viewModel.stopTimer()
                             TimerPhase.FINISHED -> viewModel.stopTimer()
                         }
                     }

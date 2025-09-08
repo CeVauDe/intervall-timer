@@ -2,8 +2,10 @@ package com.cevaude.interval_timer
 
 enum class TimerPhase {
     IDLE,
+    WARMUP,
     TRAINING,
     PAUSE,
+    COOLDOWN,
     FINISHED
 }
 
