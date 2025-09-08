@@ -1,6 +1,6 @@
-# CLAUDE.md
+# COPILOT INSTRUCTIONS
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to GitHub COPILOT when working with code in this repository.
 
 ## Project Overview
 
