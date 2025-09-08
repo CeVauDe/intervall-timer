@@ -56,13 +56,14 @@ class TimerViewModel : ViewModel() {
     private fun startCountdown() {
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
-            while (_timerState.value.isRunning && _timerState.value.remainingTimeSeconds > 0) {
+            while (_timerState.value.isRunning) {
                 delay(1000)
                 val currentState = _timerState.value
-                if (currentState.remainingTimeSeconds > 0) {
-                    _timerState.value = currentState.copy(
-                        remainingTimeSeconds = currentState.remainingTimeSeconds - 1
-                    )
+                val newTime = currentState.remainingTimeSeconds - 1
+                
+                if (newTime > 0) {
+                    // Continue countdown
+                    _timerState.value = currentState.copy(remainingTimeSeconds = newTime)
                 } else {
                     // Time's up, move to next phase
                     completeCurrentPhase()
