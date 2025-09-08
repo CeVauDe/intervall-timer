@@ -49,25 +49,36 @@ Design a training routine with:
    - Modified `getProgressPercentage()` for 5-second durations
    - Fixed existing tests to match new requirements
 
-### 🚧 IN PROGRESS - Phase 2: State Management  
-1. **Enhanced TimerState** - NEXT
-   - Add routine tracking properties
-   - Add progress calculation
-   - Update existing TimerState for backward compatibility
+### ✅ COMPLETED - Phase 2: State Management  
+1. **Enhanced TimerState** ✅
+   - Added routine tracking properties: `routine`, `currentStepIndex`, `totalSteps`
+   - Added progress calculation: `progressPercentage`
+   - Maintains backward compatibility with existing code
+   - Comprehensive tests for routine state management
 
-2. **Enhanced TimerViewModel** - NEXT
-   - Add routine-based progression logic
-   - Implement `startComplexRoutine()`
-   - Update phase transition logic
+2. **Enhanced TimerViewModel** ✅
+   - Added `startComplexRoutine()` method for 6-step routine
+   - Implemented routine-based progression logic with `proceedToNextStep()`
+   - Enhanced `completeCurrentPhase()` to handle both routine and legacy modes
+   - Maintains backward compatibility with existing `startTimer()` method
+   - Full test coverage for complex routine progression
 
-### 📋 TODO - Phase 3: Integration
-1. **Integration Tests** - TODO
+3. **Test Consolidation** ✅
+   - Merged Enhanced* tests into main test files
+   - Removed separate Enhanced test files for cleaner structure
+   - Updated all tests to use consistent 5-second durations
+   - Eliminated legacy behavior support per requirements
+   - All 32 tests passing with consolidated structure
+
+### 🚧 CURRENT - Phase 3: Integration
+1. **Integration Tests** - NEXT
    - Complete routine flow testing
-   - Phase transition verification
+   - End-to-end verification of full sequence
 
-2. **UI Updates** - TODO
-   - Display routine progress
-   - Show current step information
+2. **UI Updates** - NEXT
+   - Update App.kt to use `startComplexRoutine()` instead of `startTimer()`
+   - Display routine progress information
+   - Show current step information (e.g., "Step 2 of 6: Training")
 
 ## Design Approach
 
@@ -105,19 +116,17 @@ data class TrainingRoutine(
 }
 ```
 
-### 3. Enhanced TimerState - NEXT TO IMPLEMENT
-Update TimerState to track the routine progress:
-
+### 3. Enhanced TimerState ✅
 ```kotlin
 data class TimerState(
     val phase: TimerPhase = TimerPhase.IDLE,
     val remainingTimeSeconds: Int = 0,
     val isRunning: Boolean = false,
-    val routine: TrainingRoutine? = null,        // ⬅️ ADD
-    val currentStepIndex: Int = 0,               // ⬅️ ADD
-    val totalSteps: Int = 0                      // ⬅️ ADD
+    val routine: TrainingRoutine? = null,        // ✅ ADDED
+    val currentStepIndex: Int = 0,               // ✅ ADDED
+    val totalSteps: Int = 0                      // ✅ ADDED
 ) {
-    val progressPercentage: Float                // ⬅️ ADD
+    val progressPercentage: Float                // ✅ ADDED
         get() = if (totalSteps > 0) currentStepIndex.toFloat() / totalSteps else 0f
 }
 ```
@@ -140,22 +149,49 @@ object TrainingRoutineFactory {
 }
 ```
 
-### 5. Enhanced TimerViewModel - NEXT TO IMPLEMENT
-Update the ViewModel to handle routine-based progression:
-
+### 5. Enhanced TimerViewModel ✅
 ```kotlin
 class TimerViewModel : ViewModel() {
-    fun startComplexRoutine() {                 // ⬅️ ADD
+    fun startComplexRoutine() {                 // ✅ ADDED
         val routine = TrainingRoutineFactory.createComplexRoutine()
         startRoutine(routine)
     }
     
-    private fun startRoutine(routine: TrainingRoutine) {  // ⬅️ ADD
-        // Implementation needed
+    private fun startRoutine(routine: TrainingRoutine) {  // ✅ ADDED
+        routine.currentStep?.let { step ->
+            _timerState.value = TimerState(
+                phase = step.phase,
+                remainingTimeSeconds = step.durationSeconds,
+                isRunning = true,
+                routine = routine,
+                currentStepIndex = routine.currentStepIndex,
+                totalSteps = routine.steps.size
+            )
+            startCountdown()
+        }
     }
     
-    private fun proceedToNextStep() {           // ⬅️ ADD
-        // Implementation needed  
+    private fun proceedToNextStep() {           // ✅ ADDED
+        val currentState = _timerState.value
+        val routine = currentState.routine ?: return
+        
+        val nextRoutine = routine.nextStep()
+        
+        if (nextRoutine.isComplete) {
+            // Routine finished
+            countdownJob?.cancel()
+            _timerState.value = TimerState(
+                phase = TimerPhase.FINISHED,
+                remainingTimeSeconds = 0,
+                isRunning = false,
+                routine = nextRoutine,
+                currentStepIndex = nextRoutine.currentStepIndex,
+                totalSteps = nextRoutine.steps.size
+            )
+        } else {
+            // Continue to next step
+            startRoutine(nextRoutine)
+        }
     }
 }
 ```
@@ -170,17 +206,19 @@ class TimerViewModel : ViewModel() {
 5. ✅ **Test**: Write tests for `TrainingRoutineFactory`
 6. ✅ **Implement**: Create factory with hardcoded complex routine
 
-### 🚧 CURRENT Phase 2: State Management  
-1. **Test**: Write tests for enhanced `TimerState` with routine tracking
-2. **Implement**: Update TimerState data class
-3. **Test**: Write tests for routine progression in ViewModel
-4. **Implement**: Update TimerViewModel to handle routines
+### ✅ COMPLETED Phase 2: State Management  
+1. ✅ **Test**: Write tests for enhanced `TimerState` with routine tracking
+2. ✅ **Implement**: Update TimerState data class
+3. ✅ **Test**: Write tests for routine progression in ViewModel
+4. ✅ **Implement**: Update TimerViewModel to handle routines
+5. ✅ **Consolidate**: Merge Enhanced* tests into main test files
+6. ✅ **Cleanup**: Remove legacy behavior support
 
-### 📋 NEXT Phase 3: Integration
+### 🚧 CURRENT Phase 3: Integration
 1. **Test**: Write integration tests for complete routine flow
-2. **Implement**: Update UI to display current phase and progress
-3. **Test**: Write tests for all phase transitions
-4. **Implement**: Ensure all transitions work correctly
+2. **Implement**: Update UI to use `startComplexRoutine()` by default
+3. **Test**: Write tests for UI progress display
+4. **Implement**: Add routine progress information to UI
 
 ## Future Extensibility Points
 
@@ -202,4 +240,4 @@ class TimerViewModel : ViewModel() {
 
 ## Next Steps
 
-Continue with Phase 2 implementation: Enhanced TimerState with routine tracking properties and enhanced TimerViewModel with routine-based progression logic.
+Begin Phase 3 implementation: Integration tests and UI updates to use the complex routine by default.
