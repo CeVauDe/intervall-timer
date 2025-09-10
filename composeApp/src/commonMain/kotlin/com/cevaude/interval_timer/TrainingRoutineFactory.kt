@@ -4,12 +4,12 @@ object TrainingRoutineFactory {
     fun createComplexRoutine(): TrainingRoutine {
         return TrainingRoutine(
             steps = listOf(
-                TrainingStep(TimerPhase.WARMUP, 5),
-                TrainingStep(TimerPhase.TRAINING, 5),
-                TrainingStep(TimerPhase.PAUSE, 5),
-                TrainingStep(TimerPhase.TRAINING, 5),
-                TrainingStep(TimerPhase.PAUSE, 5),
-                TrainingStep(TimerPhase.COOLDOWN, 5)
+                TrainingStep(TimerPhase.WARMUP, 25),
+                TrainingStep(TimerPhase.TRAINING, 25),
+                TrainingStep(TimerPhase.PAUSE, 25),
+                TrainingStep(TimerPhase.TRAINING, 25),
+                TrainingStep(TimerPhase.PAUSE, 25),
+                TrainingStep(TimerPhase.COOLDOWN, 25)
             )
         )
     }

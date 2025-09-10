@@ -27,9 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 
 @Composable

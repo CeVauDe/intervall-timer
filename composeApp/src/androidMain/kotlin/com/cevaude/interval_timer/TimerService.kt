@@ -175,7 +175,7 @@ class TimerService : Service() {
             WAKE_LOCK_TAG
         ).apply {
             // Don't let CPU go to sleep while timer is running
-            acquire()
+            acquire(100*60*1000L)
         }
     }
 
