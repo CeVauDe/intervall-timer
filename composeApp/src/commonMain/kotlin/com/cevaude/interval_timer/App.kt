@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,14 +34,18 @@ import kotlin.math.sin
 
 @Composable
 @Preview
-fun App(finisherSoundPlayer: FinisherSoundPlayer = NoOpFinisherSoundPlayer) {
+fun App(
+    finisherSoundPlayer: FinisherSoundPlayer = NoOpFinisherSoundPlayer,
+    onStartTimer: () -> Unit = {},
+    onStopTimer: () -> Unit = {}
+) {
     MaterialTheme {
         val viewModel: TimerViewModel = viewModel()
         val timerState by viewModel.timerState.collectAsState()
         val finisherSoundEvent by viewModel.finisherSoundEvent.collectAsState()
 
         // Play sound when finisherSoundEvent increments
-        androidx.compose.runtime.LaunchedEffect(finisherSoundEvent) {
+        LaunchedEffect(finisherSoundEvent) {
             if (finisherSoundEvent > 0) {
                 finisherSoundPlayer.play()
             }
@@ -112,9 +117,18 @@ fun App(finisherSoundPlayer: FinisherSoundPlayer = NoOpFinisherSoundPlayer) {
                 Button(
                     onClick = {
                         when (timerState.phase) {
-                            TimerPhase.IDLE -> viewModel.startComplexRoutine()
-                            TimerPhase.WARMUP, TimerPhase.TRAINING, TimerPhase.PAUSE, TimerPhase.COOLDOWN -> viewModel.stopTimer()
-                            TimerPhase.FINISHED -> viewModel.stopTimer()
+                            TimerPhase.IDLE -> {
+                                viewModel.startComplexRoutine()
+                                onStartTimer()
+                            }
+                            TimerPhase.WARMUP, TimerPhase.TRAINING, TimerPhase.PAUSE, TimerPhase.COOLDOWN -> {
+                                viewModel.stopTimer()
+                                onStopTimer()
+                            }
+                            TimerPhase.FINISHED -> {
+                                viewModel.stopTimer()
+                                onStopTimer()
+                            }
                         }
                     }
                 ) {
@@ -136,15 +150,11 @@ fun CircularProgress(
     color: Color = MaterialTheme.colorScheme.primary
 ) {
     Canvas(modifier = modifier) {
-        drawCircularProgress(
-            progress = progress,
-            strokeWidth = strokeWidth,
-            color = color
-        )
+        drawCircularProgress(progress, strokeWidth, color)
     }
 }
 
-private fun DrawScope.drawCircularProgress(
+fun DrawScope.drawCircularProgress(
     progress: Float,
     strokeWidth: Float,
     color: Color
