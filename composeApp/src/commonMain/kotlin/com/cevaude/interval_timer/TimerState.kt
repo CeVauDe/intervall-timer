@@ -2,11 +2,11 @@ package com.cevaude.interval_timer
 
 
 data class TimerState(
-    var remainingStepTimeSeconds: Int = 0,
-    var passedTimeSeconds: Int = 0,
-    var isRunning: Boolean = false,
+    val remainingStepTimeSeconds: Int = 0,
+    val passedTimeSeconds: Int = 0,
+    val isRunning: Boolean = false,
     val routine: TrainingRoutine? = null,
-    var currentStepIndex: Int = 0
+    val currentStepIndex: Int = 0
 ) {
     val progressPercentage: Float
         get() = if (routine?.steps?.isNotEmpty() ?: false) currentStepIndex.toFloat() / routine.steps.size else 0f

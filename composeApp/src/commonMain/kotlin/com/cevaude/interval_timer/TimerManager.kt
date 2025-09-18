@@ -48,28 +48,45 @@ class TimerManager(private val coroutineScope: CoroutineScope) {
         // Finisher sound event: always trigger when moving to next step (except initial start)
         _finisherSoundEvent.value += 1
 
-        if (_timerState.value.isRoutineComplete) {
+        val currentState = _timerState.value
+        if (currentState.isRoutineComplete) {
             // Routine finished
             countdownJob?.cancel()
             _timerState.value = TimerState()
         } else {
-            // Continue to next step
-            _timerState.value.currentStepIndex++
+            // Continue to next step - create new state object
+            val nextStepIndex = currentState.currentStepIndex + 1
+            val nextStep = currentState.routine?.steps?.getOrNull(nextStepIndex)
+            _timerState.value = currentState.copy(
+                currentStepIndex = nextStepIndex,
+                remainingStepTimeSeconds = nextStep?.durationSeconds ?: 0
+            )
+            startStepCountdown()
         }
     }
 
     private fun startStepCountdown() {
-        _timerState.value.remainingStepTimeSeconds = _timerState.value.currentStep?.durationSeconds ?: 0
+        val currentState = _timerState.value
+        val initialTime = currentState.currentStep?.durationSeconds ?: 0
+
+        // Update state with initial time if needed
+        if (currentState.remainingStepTimeSeconds != initialTime) {
+            _timerState.value = currentState.copy(remainingStepTimeSeconds = initialTime)
+        }
 
         countdownJob?.cancel()
         countdownJob = coroutineScope.launch {
             while (_timerState.value.isRunning) {
                 delay(1000)
-                val newTime = _timerState.value.remainingStepTimeSeconds - 1
+                val currentStateInLoop = _timerState.value
+                val newTime = currentStateInLoop.remainingStepTimeSeconds - 1
 
                 if (newTime > 0) {
-                    // Continue countdown
-                    _timerState.value.remainingStepTimeSeconds = newTime
+                    // Continue countdown - create new state object
+                    _timerState.value = currentStateInLoop.copy(
+                        remainingStepTimeSeconds = newTime,
+                        passedTimeSeconds = currentStateInLoop.passedTimeSeconds + 1
+                    )
                 } else {
                     // Time's up, move to next step
                     proceedToNextStep()
