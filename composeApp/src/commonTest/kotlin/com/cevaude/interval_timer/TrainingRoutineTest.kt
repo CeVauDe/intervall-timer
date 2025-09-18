@@ -2,9 +2,6 @@ package com.cevaude.interval_timer
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
 class NewTrainingRoutineTest {
 

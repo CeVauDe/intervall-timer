@@ -5,10 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
@@ -49,9 +47,6 @@ class TimerService : Service() {
     inner class TimerBinder : Binder() {
         fun getService(): TimerService = this@TimerService
     }
-
-    // Function to get the timer manager
-    fun getTimerManager(): TimerManager = timerManager
 
     override fun onCreate() {
         super.onCreate()
@@ -108,22 +103,20 @@ class TimerService : Service() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                "Interval Timer",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Shows current timer status"
-                setShowBadge(false)
-                // Disable sound and vibration for the timer notification
-                setSound(null, null)
-                enableVibration(false)
-            }
-
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            "Interval Timer",
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = "Shows current timer status"
+            setShowBadge(false)
+            // Disable sound and vibration for the timer notification
+            setSound(null, null)
+            enableVibration(false)
         }
+
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
     private fun createNotification(): Notification {
@@ -149,7 +142,7 @@ class TimerService : Service() {
     }
 
     private fun updateNotification() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, createNotification())
     }
 
@@ -168,7 +161,7 @@ class TimerService : Service() {
     }
 
     private fun acquireWakeLock() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
             WAKE_LOCK_TAG
