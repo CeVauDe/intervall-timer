@@ -11,20 +11,16 @@ class TimerViewModel : ViewModel() {
     val timerState: StateFlow<TimerState> = timerManager.timerState
     val finisherSoundEvent: StateFlow<Int> = timerManager.finisherSoundEvent
 
-    fun startComplexRoutine() {
-        timerManager.startComplexRoutine()
-    }
-
-    fun startTimer() {
-        timerManager.startTimer()
+    fun startTestRoutine() {
+        timerManager.startTestRoutine()
     }
 
     fun stopTimer() {
         timerManager.stopTimer()
     }
 
-    // For testing
-    fun completeCurrentPhase() {
-        timerManager.completeCurrentPhase()
+    fun proceedToNextStep() {
+        timerManager.proceedToNextStep()
     }
+
 }

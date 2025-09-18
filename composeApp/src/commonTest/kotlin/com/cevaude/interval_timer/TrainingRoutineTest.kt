@@ -6,85 +6,69 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
-class TrainingStepTest {
+class NewTrainingRoutineTest {
 
     @Test
-    fun trainingStep_createsCorrectly() {
-        val step = TrainingStep(TimerPhase.TRAINING, 5)
+    fun trainingRoutineBuilder_createsEmptyRoutine() {
+        val builder = TrainingRoutineBuilder()
+        val routine = builder.build()
 
-        assertEquals(TimerPhase.TRAINING, step.phase)
-        assertEquals(5, step.durationSeconds)
-    }
-}
-
-class TrainingRoutineTest {
-
-    @Test
-    fun trainingRoutine_currentStep_returnsFirstStepInitially() {
-        val steps = listOf(
-            TrainingStep(TimerPhase.WARMUP, 5),
-            TrainingStep(TimerPhase.TRAINING, 5)
-        )
-        val routine = TrainingRoutine(steps)
-
-        assertEquals(TrainingStep(TimerPhase.WARMUP, 5), routine.currentStep)
-        assertEquals(0, routine.currentStepIndex)
+        assertEquals(0, routine.steps.size, message = "Empty routine should have zero steps")
     }
 
     @Test
-    fun trainingRoutine_currentStep_returnsNullForEmptySteps() {
-        val routine = TrainingRoutine(emptyList())
+    fun trainingRoutineBuilder_addsOneStepCorrectly() {
+        val builder = TrainingRoutineBuilder()
+        builder.addStep("Step 1", 30)
+        val routine = builder.build()
 
-        assertNull(routine.currentStep)
+        assertEquals(1, routine.steps.size, message = "Routine should have one step")
+        assertEquals("Step 1", routine.steps[0].name, message = "Step name should match")
+        assertEquals(30, routine.steps[0].durationSeconds, message = "Step duration should match")
     }
 
     @Test
-    fun trainingRoutine_isComplete_falseWhenStepsRemain() {
-        val steps = listOf(
-            TrainingStep(TimerPhase.WARMUP, 5),
-            TrainingStep(TimerPhase.TRAINING, 5)
-        )
-        val routine = TrainingRoutine(steps, currentStepIndex = 0)
+    fun trainingRoutineBuilder_addsMultipleStepsCorrectly() {
+        val builder = TrainingRoutineBuilder()
+        for (i in 1..5) {
+            builder.addStep("Step $i", i * 10)
+        }
+        val routine = builder.build()
+        assertEquals(5, routine.steps.size, message = "Routine should have five steps")
+    }
+    
+    @Test
+    fun trainingRoutineBuilder_addsRepeatedStepsCorrectly() {
+        val builder = TrainingRoutineBuilder()
+        builder.addRepeatingSteps(listOf(TrainingStep("Run", 5), TrainingStep("Pause", 5),), 3)
+        val routine = builder.build()
 
-        assertFalse(routine.isComplete)
+        assertEquals(6, routine.steps.size, message = "Routine should have six steps")
+        for (i in 0..2){
+            val iteration = i + 1
+            assertEquals("Run $iteration/3", routine.steps[i*2].name, message = "Run step of iteration should match")
+            assertEquals("Pause $iteration/3", routine.steps[i*2+1].name, message = "Pause step of iteration should match")
+        }
     }
 
     @Test
-    fun trainingRoutine_isComplete_trueWhenAllStepsFinished() {
-        val steps = listOf(
-            TrainingStep(TimerPhase.WARMUP, 5),
-            TrainingStep(TimerPhase.TRAINING, 5)
-        )
-        val routine = TrainingRoutine(steps, currentStepIndex = 2)
+    fun trainingRoutineBuilder_addsMixedStepsCorrectly() {
+        val builder = TrainingRoutineBuilder()
+        builder.addStep("Warmup", 15)
+        builder.addRepeatingSteps(listOf(TrainingStep("Run", 5), TrainingStep("Pause", 5),), 2)
+        builder.addStep("Cooldown", 10)
+        val routine = builder.build()
 
-        assertTrue(routine.isComplete)
+        assertEquals(6, routine.steps.size, message = "Routine should have six steps")
     }
 
     @Test
-    fun trainingRoutine_nextStep_advancesToNextStep() {
-        val steps = listOf(
-            TrainingStep(TimerPhase.WARMUP, 5),
-            TrainingStep(TimerPhase.TRAINING, 5)
-        )
-        val routine = TrainingRoutine(steps, currentStepIndex = 0)
+    fun trainingRoutineBuilder_calculatesTotalDurationCorrectly() {
+        val builder = TrainingRoutineBuilder()
+        builder.addStep("Warmup", 15)
+        builder.addStep("Cooldown", 10)
+        val routine = builder.build()
 
-        val nextRoutine = routine.nextStep()
-
-        assertEquals(1, nextRoutine.currentStepIndex)
-        assertEquals(TrainingStep(TimerPhase.TRAINING, 5), nextRoutine.currentStep)
-    }
-
-    @Test
-    fun trainingRoutine_nextStep_canAdvanceBeyondLastStep() {
-        val steps = listOf(
-            TrainingStep(TimerPhase.WARMUP, 5)
-        )
-        val routine = TrainingRoutine(steps, currentStepIndex = 0)
-
-        val nextRoutine = routine.nextStep()
-
-        assertEquals(1, nextRoutine.currentStepIndex)
-        assertTrue(nextRoutine.isComplete)
-        assertNull(nextRoutine.currentStep)
+        assertEquals(25, routine.totalDurationSeconds, message = "Total duration should be 25 seconds")
     }
 }

@@ -76,7 +76,7 @@ class TimerService : Service() {
                 startForeground(NOTIFICATION_ID, createNotification())
 
                 // Start the timer
-                timerManager.startComplexRoutine()
+                timerManager.startTestRoutine()
             }
             ACTION_STOP -> {
                 // Stop the timer and service
@@ -137,11 +137,10 @@ class TimerService : Service() {
 
         // Get current timer state
         val state = timerManager.getCurrentState()
-        val phase = state.phase.name
-        val time = formatTimeForDisplay(state.remainingTimeSeconds)
+        val time = formatTimeForDisplay(state.remainingStepTimeSeconds)
 
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("Interval Timer - $phase")
+            .setContentTitle("Interval Timer - ${state.currentStep?.name ?: "No Step"}")
             .setContentText("Remaining time: $time")
             .setSmallIcon(android.R.drawable.ic_media_play) // Replace with your app icon
             .setContentIntent(pendingIntent)
@@ -161,7 +160,7 @@ class TimerService : Service() {
                 updateNotification()
 
                 // If timer is finished, stop the service
-                if (it.phase == TimerPhase.FINISHED) {
+                if (it.isRoutineComplete) {
                     stopSelf()
                 }
             }

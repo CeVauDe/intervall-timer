@@ -1,22 +1,22 @@
 package com.cevaude.interval_timer
 
-enum class TimerPhase {
-    IDLE,
-    WARMUP,
-    TRAINING,
-    PAUSE,
-    COOLDOWN,
-    FINISHED
-}
 
 data class TimerState(
-    val phase: TimerPhase = TimerPhase.IDLE,
-    val remainingTimeSeconds: Int = 0,
-    val isRunning: Boolean = false,
+    var remainingStepTimeSeconds: Int = 0,
+    var passedTimeSeconds: Int = 0,
+    var isRunning: Boolean = false,
     val routine: TrainingRoutine? = null,
-    val currentStepIndex: Int = 0,
-    val totalSteps: Int = 0
+    var currentStepIndex: Int = 0
 ) {
     val progressPercentage: Float
-        get() = if (totalSteps > 0) currentStepIndex.toFloat() / totalSteps else 0f
+        get() = if (routine?.steps?.isNotEmpty() ?: false) currentStepIndex.toFloat() / routine.steps.size else 0f
+
+    val currentStep: TrainingStep?
+        get() = routine?.steps?.getOrNull(currentStepIndex)
+
+    val isRoutineComplete: Boolean
+        get() = routine != null && currentStepIndex >= (routine.steps.size - 1) && remainingStepTimeSeconds <= 0
+
+    val totalSteps: Int
+        get() = routine?.steps?.size ?: 0
 }

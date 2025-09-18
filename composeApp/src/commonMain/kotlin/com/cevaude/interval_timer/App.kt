@@ -60,7 +60,7 @@ fun App(
             ) {
                 // Phase name
                 Text(
-                    text = getPhaseDisplayName(timerState.phase),
+                    text = timerState.currentStep?.name ?: "No routine selected",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -68,7 +68,7 @@ fun App(
                 // Progress information for routine
                 if (timerState.routine != null) {
                     Text(
-                        text = "Step ${timerState.currentStepIndex + 1} of ${timerState.totalSteps}",
+                        text = "Step ${timerState.currentStepIndex + 1} of ${timerState.routine?.steps?.size ?: 0}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -86,23 +86,24 @@ fun App(
                             // Use routine progress for outer ring
                             timerState.progressPercentage
                         } else {
-                            // Use phase progress for simple timer
-                            getProgressPercentage(timerState.phase, timerState.remainingTimeSeconds)
+                            // Show no progress if no routine
+                            0f
                         },
                         modifier = Modifier.fillMaxSize()
                     )
                     
                     // Inner ring for current step progress (only for routines)
-                    if (timerState.routine != null) {
+                    val currentStep = timerState.currentStep
+                    if (currentStep != null) {
                         CircularProgress(
-                            progress = getProgressPercentage(timerState.phase, timerState.remainingTimeSeconds),
+                            progress = getProgressPercentage(currentStep, timerState.remainingStepTimeSeconds),
                             modifier = Modifier.size(160.dp),
                             color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
                         )
                     }
 
                     Text(
-                        text = formatTime(timerState.remainingTimeSeconds),
+                        text = formatTime(timerState.remainingStepTimeSeconds),
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -113,16 +114,12 @@ fun App(
                 // Start/Stop/Reset button
                 Button(
                     onClick = {
-                        when (timerState.phase) {
-                            TimerPhase.IDLE -> {
-                                viewModel.startComplexRoutine()
+                        when (timerState.isRunning) {
+                            false -> {
+                                viewModel.startTestRoutine()
                                 onStartTimer()
                             }
-                            TimerPhase.WARMUP, TimerPhase.TRAINING, TimerPhase.PAUSE, TimerPhase.COOLDOWN -> {
-                                viewModel.stopTimer()
-                                onStopTimer()
-                            }
-                            TimerPhase.FINISHED -> {
+                           true -> {
                                 viewModel.stopTimer()
                                 onStopTimer()
                             }
@@ -130,7 +127,7 @@ fun App(
                     }
                 ) {
                     Text(
-                        text = getButtonText(timerState.phase),
+                        text = getButtonText(timerState),
                         fontSize = 18.sp
                     )
                 }

@@ -21,32 +21,22 @@ class TimerManager(private val coroutineScope: CoroutineScope) {
 
     private var countdownJob: Job? = null
 
-    fun startComplexRoutine() {
-        val routine = TrainingRoutineFactory.createComplexRoutine()
-        startRoutine(routine)
+    fun startTestRoutine() {
+        val builder = TrainingRoutineBuilder()
+        builder.addStep("Step 1", 10)
+        builder.addStep("Step 2", 10)
+        builder.addStep("Step 3", 10)
+        builder.addStep("Step 4", 10)
+
+        startRoutine(builder.build())
     }
 
-    private fun startRoutine(routine: TrainingRoutine) {
-        routine.currentStep?.let { step ->
-            _timerState.value = TimerState(
-                phase = step.phase,
-                remainingTimeSeconds = step.durationSeconds,
-                isRunning = true,
-                routine = routine,
-                currentStepIndex = routine.currentStepIndex,
-                totalSteps = routine.steps.size
-            )
-            startCountdown()
-        }
-    }
-
-    fun startTimer() {
+    fun startRoutine(routine: TrainingRoutine) {
         _timerState.value = TimerState(
-            phase = TimerPhase.TRAINING,
-            remainingTimeSeconds = 5,
-            isRunning = true
+            isRunning = true,
+            routine = routine,
         )
-        startCountdown()
+        startStepCountdown()
     }
 
     fun stopTimer() {
@@ -54,76 +44,35 @@ class TimerManager(private val coroutineScope: CoroutineScope) {
         _timerState.value = TimerState()
     }
 
-    fun completeCurrentPhase() {
-        val currentState = _timerState.value
-        val routine = currentState.routine
-
-        if (routine != null) {
-            // Routine-based progression
-            proceedToNextStep()
-        } else {
-            // Legacy progression for backward compatibility
-            when (currentState.phase) {
-                TimerPhase.TRAINING -> {
-                    _timerState.value = TimerState(
-                        phase = TimerPhase.PAUSE,
-                        remainingTimeSeconds = 5,
-                        isRunning = true
-                    )
-                    startCountdown()
-                }
-                TimerPhase.PAUSE -> {
-                    countdownJob?.cancel()
-                    _timerState.value = TimerState(
-                        phase = TimerPhase.FINISHED,
-                        remainingTimeSeconds = 0,
-                        isRunning = false
-                    )
-                }
-                else -> { /* Do nothing for IDLE or FINISHED */ }
-            }
-        }
-    }
-
-    private fun proceedToNextStep() {
-        val currentState = _timerState.value
-        val routine = currentState.routine ?: return
-
-        val nextRoutine = routine.nextStep()
+    fun proceedToNextStep() {
         // Finisher sound event: always trigger when moving to next step (except initial start)
         _finisherSoundEvent.value += 1
 
-        if (nextRoutine.isComplete) {
+        if (_timerState.value.isRoutineComplete) {
             // Routine finished
             countdownJob?.cancel()
-            _timerState.value = TimerState(
-                phase = TimerPhase.FINISHED,
-                remainingTimeSeconds = 0,
-                isRunning = false,
-                routine = nextRoutine,
-                currentStepIndex = nextRoutine.currentStepIndex,
-                totalSteps = nextRoutine.steps.size
-            )
+            _timerState.value = TimerState()
         } else {
             // Continue to next step
-            startRoutine(nextRoutine)
+            _timerState.value.currentStepIndex++
         }
     }
 
-    private fun startCountdown() {
+    private fun startStepCountdown() {
+        _timerState.value.remainingStepTimeSeconds = _timerState.value.currentStep?.durationSeconds ?: 0
+
         countdownJob?.cancel()
         countdownJob = coroutineScope.launch {
             while (_timerState.value.isRunning) {
                 delay(1000)
-                val currentState = _timerState.value
-                val newTime = currentState.remainingTimeSeconds - 1
+                val newTime = _timerState.value.remainingStepTimeSeconds - 1
 
                 if (newTime > 0) {
                     // Continue countdown
-                    _timerState.value = currentState.copy(remainingTimeSeconds = newTime)
+                    _timerState.value.remainingStepTimeSeconds = newTime
                 } else {
-                    // Time's up, move to next phase
-                    completeCurrentPhase()
+                    // Time's up, move to next step
+                    proceedToNextStep()
                     break
                 }
             }

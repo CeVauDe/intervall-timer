@@ -16,46 +16,59 @@ class TimerUITest {
     }
 
     @Test
-    fun getPhaseDisplayName_returnsCorrectNames() {
-        assertEquals("Training", getPhaseDisplayName(TimerPhase.TRAINING))
-        assertEquals("Pause", getPhaseDisplayName(TimerPhase.PAUSE))
-        assertEquals("Finished", getPhaseDisplayName(TimerPhase.FINISHED))
-        assertEquals("Ready", getPhaseDisplayName(TimerPhase.IDLE))
-    }
-
-    @Test
     fun getButtonText_returnsCorrectText() {
-        assertEquals("Start", getButtonText(TimerPhase.IDLE))
-        assertEquals("Stop", getButtonText(TimerPhase.TRAINING))
-        assertEquals("Stop", getButtonText(TimerPhase.PAUSE))
-        assertEquals("Reset", getButtonText(TimerPhase.FINISHED))
+        assertEquals("Start", getButtonText(TimerState()))
+        assertEquals(
+            "Stop", getButtonText(
+                TimerState(
+                    routine = TrainingRoutine(
+                        steps = listOf(
+                            TrainingStep("test", 2)
+                        )
+                    ), isRunning = true, remainingStepTimeSeconds = 1
+                )
+            )
+        )
+        assertEquals(
+            "Reset", getButtonText(
+                TimerState(
+                    routine = TrainingRoutine(
+                        steps = listOf(
+                            TrainingStep("test", 2)
+                        )
+                    ), isRunning = true,
+                )
+            )
+        )
     }
 
     @Test
     fun getProgressPercentage_calculatesCorrectProgress() {
-        // All phases now use 5 seconds total duration
         // Progress calculation: (totalSeconds - remainingSeconds) / totalSeconds
 
-        // Training phase: 5 seconds total
-        assertEquals(0.0f, getProgressPercentage(TimerPhase.TRAINING, 5), 0.01f)  // Just started
-        assertEquals(0.6f, getProgressPercentage(TimerPhase.TRAINING, 2), 0.01f)  // 3 seconds elapsed
-        assertEquals(1.0f, getProgressPercentage(TimerPhase.TRAINING, 0), 0.01f)  // Finished
+        // Step with 5 seconds total
+        assertEquals(
+            0.0f,
+            getProgressPercentage(TrainingStep("test", 5), 5),
+            0.01f
+        )  // Just started
+        assertEquals(
+            0.6f,
+            getProgressPercentage(TrainingStep("test", 5), 2),
+            0.01f
+        )  // 3 seconds elapsed
+        assertEquals(1.0f, getProgressPercentage(TrainingStep("test", 5), 0), 0.01f)  // Finished
 
-        // Pause phase: 5 seconds total
-        assertEquals(0.0f, getProgressPercentage(TimerPhase.PAUSE, 5), 0.01f)     // Just started
-        assertEquals(0.6f, getProgressPercentage(TimerPhase.PAUSE, 2), 0.01f)     // 3 seconds elapsed
-        assertEquals(1.0f, getProgressPercentage(TimerPhase.PAUSE, 0), 0.01f)     // Finished
-
-        // Warmup phase: 5 seconds total
-        assertEquals(0.0f, getProgressPercentage(TimerPhase.WARMUP, 5), 0.01f)
-        assertEquals(1.0f, getProgressPercentage(TimerPhase.WARMUP, 0), 0.01f)
-
-        // Cooldown phase: 5 seconds total
-        assertEquals(0.0f, getProgressPercentage(TimerPhase.COOLDOWN, 5), 0.01f)
-        assertEquals(1.0f, getProgressPercentage(TimerPhase.COOLDOWN, 0), 0.01f)
-
-        // Other phases
-        assertEquals(0.0f, getProgressPercentage(TimerPhase.IDLE, 0), 0.01f)
-        assertEquals(0.0f, getProgressPercentage(TimerPhase.FINISHED, 0), 0.01f)
+        // Step with 30 seconds total
+        assertEquals(
+            0.0f,
+            getProgressPercentage(TrainingStep("test", 30), 30),
+            0.01f
+        )
+        assertEquals(
+            0.5f,
+            getProgressPercentage(TrainingStep("test", 30), 15),
+            0.01f
+        )     // 3 seconds elapsed
     }
 }
